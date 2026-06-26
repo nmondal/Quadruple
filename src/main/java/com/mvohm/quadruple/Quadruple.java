@@ -3146,14 +3146,7 @@ public class Quadruple extends Number implements Comparable<Quadruple> {
         return this;
       } // NumberParts.decompose(String source) {
 
-      /**
-       * Builds a String containing the mantissa of the floating-point number being parsed
-       * as a string of digits without trailing or leading zeros.
-       * Finds the exponent correction depending on the point position and the number of leading zeroes.
-       * @param intPartString the integer part of the mantissa, (m.b. including the dot)
-       * @param fractPartString the integer part of the mantissa
-       */
-      private int buildMantString(String intPartString, String fractPartString) {
+      private int buildMantString__(String intPartString, String fractPartString) {
         int expCorrection = uniteMantString(intPartString, fractPartString);
 
         final Matcher m2 = LEADING_ZEROES_PTRN.matcher(mantStr);     // Strip leading zeroes
@@ -3164,8 +3157,34 @@ public class Quadruple extends Number implements Comparable<Quadruple> {
         mantStr = mantStr.replaceFirst("0*$", "");            // Strip trailing zeroes
         return expCorrection;
       } // NumberParts.findMantString(String intPartString, String fractPartString) {
+        /**
+         * Builds a String containing the mantissa of the floating-point number being parsed
+         * as a string of digits without trailing or leading zeros.
+         * Finds the exponent correction depending on the point position and the number of leading zeroes.
+         * @param intPartString the integer part of the mantissa, (m.b. including the dot)
+         * @param fractPartString the integer part of the mantissa
+         */
+        private int buildMantString(String intPartString, String fractPartString) {
+            int expCorrection = uniteMantString(intPartString, fractPartString);
+            int lIndex = 0;
+            for ( ;  lIndex < mantStr.length() && mantStr.charAt(lIndex) == '0' ; lIndex++ );
 
-      /**
+            int rIndex = mantStr.length()  - 1 ;
+            for ( ; rIndex >= 0 && mantStr.charAt(rIndex)  == '0' ; rIndex-- );
+
+            if ( lIndex != 0 ){
+                expCorrection -= lIndex ;
+                if ( lIndex <= rIndex ) {
+                    mantStr = mantStr.substring(lIndex, rIndex + 1);
+                } else {
+                    mantStr = "" ; // filled up with only 0
+                }
+            }
+            return expCorrection;
+        } // NumberParts.findMantString(String intPartString, String fractPartString) {
+
+
+        /**
        * Unites the integer part of the mantissa with the fractional part and computes
        * necessary exponent correction that depends on the position of the decimal point
        * @param intPartString the integer part of the mantissa, may be null for empty mantissa (e.g. "e123"), or consist of only "."
