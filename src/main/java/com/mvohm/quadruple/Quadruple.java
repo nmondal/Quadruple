@@ -2550,15 +2550,20 @@ public class Quadruple extends Number implements Comparable<Quadruple> {
    * @param buffer contains the unpacked value to divide (32 least significant bits are used)
    */
   private static void divBuffBy10(long[] buffer) {
-
+    final long RIGHT_SHIFT =  (Long.SIZE - 1) ;
     final int maxIdx = buffer.length - 1;
-    for (int i = 0; i <= maxIdx; i++) { // big/endian
+    int i = 0;
+    for ( ; i < maxIdx; i++) { // big/endian
         long q = (buffer[i] >>> 1) / 10 << 1;
         long r = buffer[i] - q * 10;
-        buffer[i] = q + ((r | ~(r - 10)) >>> (Long.SIZE - 1));
-        r = r - ((~(r - 10) >> (Long.SIZE - 1)) & 10);
-      if (i < maxIdx)
+        buffer[i] = q + ((r | ~(r - 10)) >>> (RIGHT_SHIFT));
+        r = r - ((~(r - 10) >> (RIGHT_SHIFT)) & 10);
         buffer[i+1] += r << 32;
+    }
+    {
+      long q = (buffer[i] >>> 1) / 10 << 1;
+      long r = buffer[i] - q * 10;
+      buffer[i] = q + ((r | ~(r - 10)) >>> (RIGHT_SHIFT));
     }
   } // private static void divBuffBy10(long[] buff) {
 
