@@ -2546,14 +2546,17 @@ public class Quadruple extends Number implements Comparable<Quadruple> {
 
   /**
    * Divides the unpacked value stored in the given buffer by 10
+   * Inlining from Long, because this cuts off the time by more than half !
    * @param buffer contains the unpacked value to divide (32 least significant bits are used)
    */
   private static void divBuffBy10(long[] buffer) {
-    long r;
+
     final int maxIdx = buffer.length - 1;
     for (int i = 0; i <= maxIdx; i++) { // big/endian
-      r = Long.remainderUnsigned(buffer[i], 10);
-      buffer[i] = Long.divideUnsigned(buffer[i], 10);
+        long q = (buffer[i] >>> 1) / 10 << 1;
+        long r = buffer[i] - q * 10;
+        buffer[i] = q + ((r | ~(r - 10)) >>> (Long.SIZE - 1));
+        r = r - ((~(r - 10) >> (Long.SIZE - 1)) & 10);
       if (i < maxIdx)
         buffer[i+1] += r << 32;
     }
