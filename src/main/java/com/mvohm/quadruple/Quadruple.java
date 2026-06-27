@@ -3196,8 +3196,10 @@ public class Quadruple extends Number implements Comparable<Quadruple> {
           intPartString = fractPartString;
           fractPartString = "";
         }
+        if ( intPartString.charAt( intPartString.length() -1 ) == '.' ){
+            intPartString = intPartString.substring( 0, intPartString.length() -1 );
+        }
 
-        intPartString = intPartString.replaceFirst("\\.$", "");
         if (intPartString.isEmpty() && fractPartString.isEmpty())
           throw new NumberFormatException("Invalid number: "+sourceStr);
 
@@ -3257,7 +3259,7 @@ public class Quadruple extends Number implements Comparable<Quadruple> {
       if (qConst != null)                                // Yes
         return owner.assign(qConst);                    // respective Quadruple value
 
-      source = source.replaceAll("\\_", "");            // Separator '_' is allowed in numbers
+      source = source.replace("_", "");            // Separator '_' is allowed in numbers
       this.owner = owner;
       buildQuadruple(PARTS.decompose(source));          // Parse and set the owner's fields
       return owner;
