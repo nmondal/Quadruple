@@ -3247,11 +3247,15 @@ public class Quadruple extends Number implements Comparable<Quadruple> {
        */
       private static long extractExp10(String expString) {
         long exp10 = 0;
-        if (expString != null) {
-          final Matcher m = EXP_STR_PTRN.matcher(expString); // It will surely find, otherwise it couldn't get here
-          if (m.find()) {
-            exp10 = parseLong(m.group(2));
-            if ("-".equals(m.group(1))) exp10 = -exp10;
+        if (expString != null && !expString.isEmpty() ) {
+          final boolean isNeg = '-' == expString.charAt(1) ;
+          if ( isNeg || expString.charAt(1) == '+' ){
+              exp10 = parseLong(expString.substring(2) );
+              if( isNeg ){
+                  exp10 = -exp10;
+              }
+          }  else {
+              exp10 = parseLong(expString.substring(1) );
           }
         }
         return exp10;
