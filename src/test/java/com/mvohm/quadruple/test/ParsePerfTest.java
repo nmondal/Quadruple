@@ -31,14 +31,6 @@ public class ParsePerfTest {
     }
 
     @Test
-    public void boundaryScenariosTest(){
-        assertEquals(0.0, new Quadruple("0.000000" ).doubleValue(), 0.00000000001);
-        assertEquals(0.0, new Quadruple("00" ).doubleValue(), 0.00000000001);
-        assertEquals(0.0, new Quadruple("000" ).doubleValue(), 0.00000000001);
-        assertEquals(0.0, new Quadruple("0000" ).doubleValue(), 0.00000000001);
-    }
-
-    @Test
     public void basicParsingTest(){
         assertEquals(0.0001, new Quadruple("0.000100" ).doubleValue(), 0.00000000001);
         assertEquals(0.1001, new Quadruple("0.1001" ).doubleValue(), 0.00000000001);

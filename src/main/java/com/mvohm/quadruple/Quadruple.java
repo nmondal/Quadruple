@@ -3128,6 +3128,7 @@ public class Quadruple extends Number implements Comparable<Quadruple> {
           "^(\\+|-)?((\\d*\\.)?(\\d*))(e(\\+|-)?0*(\\d+))?$", // 19.11.29 17:37:04 Enable any number of zeroes before exponent
           Pattern.CASE_INSENSITIVE);
 
+
       /**
        * Decomposes an input string containing a floating-point number
        * into parts (sign, mantissa, exponent, and necessary exponent correction depending on the mantissa)
@@ -3135,36 +3136,71 @@ public class Quadruple extends Number implements Comparable<Quadruple> {
        * @param source the source String
        * @return the reference of this instance
        */
+
       private NumberParts decompose(String source) {
         this.sourceStr = source;
+        final int n = source.length();
+        if ( n == 0 ) throw new NumberFormatException("Invalid number: '"+source+"'");
+        int i = 0;
+        int start = 0;
+        char c = source.charAt(i);
+        this.negative  = (c == '-') ;
+        if ( negative || c == '+' ){
+            i++;
+            start++;
+        }
+        while ( i < n ){
+            c = source.charAt(i);
+            if ( !Character.isDigit(c) ){
+                break;
+            }
+            i++;
+        }
+        final String intPartString    =  source.substring( start,  i );
+        final String fractPartString ;
+        if ( i < n && c == '.' ){
+            i++;
+            start = i;
+            while ( i < n ){
+                c = source.charAt(i);
+                if ( !Character.isDigit(c) ){
+                    break;
+                }
+                i++;
+            }
+            fractPartString = source.substring( start,  i );
+        } else {
+            fractPartString = "" ;
+        }
+        final String expString ;
+        if ( i < n && c == 'e' ){
+            start = i;
+            i++;
+            c = source.charAt(i);
+            if ( c == '+' || c == '-'){
+                i++;
+            }
+          while ( i < n ){
+              c = source.charAt(i);
+              if ( !Character.isDigit(c) ){
+                  break;
+              }
+              i++;
+          }
+          expString = source.substring( start,  i );
+        } else {
+          expString = "" ;
+        }
 
-        final Matcher m = FP_STRING_PTRN.matcher(source);         //   "^(\\+|-)?((\\d*\\.)?(\\d+))(e(\\+|-)?(\\d+))?$"
-        if (!m.find())
+        if ( i != n )
           throw new NumberFormatException("Invalid number: '"+source+"'");
 
-        final boolean negative        = ("-".equals(m.group(1)));
-        final String expString        = m.group(5);
-        final String intPartString    = m.group(3);
-        final String fractPartString  = m.group(4);
-
-        this.negative = negative;
         exp10 = extractExp10(expString);
         expCorrection = buildMantString(intPartString, fractPartString ); // and exp correction
 
         return this;
       } // NumberParts.decompose(String source) {
 
-      private int buildMantString__(String intPartString, String fractPartString) {
-        int expCorrection = uniteMantString(intPartString, fractPartString);
-
-        final Matcher m2 = LEADING_ZEROES_PTRN.matcher(mantStr);     // Strip leading zeroes
-        if (m2.find()) {
-          mantStr = m2.group(2);
-          expCorrection -= m2.group(1).length();                     // - number of leading zeroes stripped
-        }
-        mantStr = mantStr.replaceFirst("0*$", "");            // Strip trailing zeroes
-        return expCorrection;
-      } // NumberParts.findMantString(String intPartString, String fractPartString) {
         /**
          * Builds a String containing the mantissa of the floating-point number being parsed
          * as a string of digits without trailing or leading zeros.
@@ -3173,7 +3209,16 @@ public class Quadruple extends Number implements Comparable<Quadruple> {
          * @param fractPartString the integer part of the mantissa
          */
         private int buildMantString(String intPartString, String fractPartString) {
-            int expCorrection = uniteMantString(intPartString, fractPartString);
+            if (intPartString == null) {
+                intPartString = fractPartString;
+                fractPartString = "";
+            }
+
+            if (intPartString.isEmpty() && fractPartString.isEmpty())
+                throw new NumberFormatException("Invalid number: "+sourceStr);
+
+            mantStr = intPartString + fractPartString;      // mantissa as a string
+            int expCorrection = intPartString.length() - 1;
             int lIndex = 0;
             for ( ;  lIndex < mantStr.length() && mantStr.charAt(lIndex) == '0' ; lIndex++ );
 
@@ -3190,30 +3235,6 @@ public class Quadruple extends Number implements Comparable<Quadruple> {
             }
             return expCorrection;
         } // NumberParts.findMantString(String intPartString, String fractPartString) {
-
-
-        /**
-       * Unites the integer part of the mantissa with the fractional part and computes
-       * necessary exponent correction that depends on the position of the decimal point
-       * @param intPartString the integer part of the mantissa, may be null for empty mantissa (e.g. "e123"), or consist of only "."
-       * @param fractPartString the fractional part of the mantissa, may be empty for e.g. "33.e5"
-       * @return the exponent correction to be added to the explicitely expressed number's exponent
-       */
-      private int uniteMantString(String intPartString, String fractPartString) {
-        if (intPartString == null) {
-          intPartString = fractPartString;
-          fractPartString = "";
-        }
-        if ( intPartString.charAt( intPartString.length() -1 ) == '.' ){
-            intPartString = intPartString.substring( 0, intPartString.length() -1 );
-        }
-
-        if (intPartString.isEmpty() && fractPartString.isEmpty())
-          throw new NumberFormatException("Invalid number: "+sourceStr);
-
-        mantStr = intPartString + fractPartString;      // mantissa as a string
-        return intPartString.length() - 1;              // 10.0 = 1e1, 1.0 = 1e0, 0.1 = 1e-1 etc;
-      } // private int NumberParts.uniteMantString( String intPartString, String fractPartString) {
 
       private static final Pattern EXP_STR_PTRN = Pattern.compile("e(\\+|-)?(\\d+)");
 
